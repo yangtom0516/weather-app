@@ -38,3 +38,8 @@ export function deleteHistoryRecord(hid) {
 export function getExportUrl(format) {
   return `${API_BASE}/history/export?format=${format}`;
 }
+
+// YouTube
+export function fetchVideos(location) {
+  return request(`/youtube/videos?${new URLSearchParams({ q: location })}`);
+}

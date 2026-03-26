@@ -9,8 +9,9 @@ import './App.css';
 import LocationModal from './components/LocationModal';
 import CurrentWeather from './components/CurrentWeather';
 import ForecastSection from './components/ForecastSection';
+import VideoSection from './components/VideoSection';
 import HistorySection from './components/HistorySection';
-import { searchWeather } from './utils/weatherApi';
+import { searchWeather, fetchVideos } from './utils/weatherApi';
 
 const { Header, Content, Footer } = Layout;
 const { Title, Text } = Typography;
@@ -20,6 +21,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [weatherData, setWeatherData] = useState(null);
   const [forecastData, setForecastData] = useState(null);
+  const [videoData, setVideoData] = useState(null);
   const [error, setError] = useState(null);
   const [activeNav, setActiveNav] = useState('check-weather');
 
@@ -28,11 +30,16 @@ export default function App() {
     setError(null);
     setWeatherData(null);
     setForecastData(null);
+    setVideoData(null);
 
     try {
-      const { current, forecast } = await searchWeather(locationInput.trim(), startDate, endDate);
+      const [{ current, forecast }, videos] = await Promise.all([
+        searchWeather(locationInput.trim(), startDate, endDate),
+        fetchVideos(locationInput.trim()),
+      ]);
       setWeatherData(current);
       setForecastData(forecast);
+      setVideoData(videos);
       setModalOpen(false);
     } catch (err) {
       setError(err.message || 'Failed to fetch weather data. Please try again.');
@@ -125,6 +132,7 @@ export default function App() {
                 </div>
                 <CurrentWeather data={weatherData} />
                 <ForecastSection data={forecastData} />
+                <VideoSection location={weatherData.location} videos={videoData} />
               </>
             )}
           </>
