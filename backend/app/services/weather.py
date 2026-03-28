@@ -1,5 +1,6 @@
 import re
 from collections import defaultdict
+from datetime import datetime, timezone, timedelta
 
 import httpx
 from fastapi import HTTPException
@@ -52,10 +53,16 @@ async def get_current_weather(q: str) -> dict:
 async def get_forecast(q: str) -> dict:
     data = await owm_get("forecast", build_owm_params(q))
 
+    tz_offset = timedelta(seconds=data["city"]["timezone"])
+    local_tz = timezone(tz_offset)
+    today_local = datetime.now(tz=local_tz).date()
+
     days = defaultdict(list)
     for entry in data["list"]:
-        date = entry["dt_txt"].split(" ")[0]
-        days[date].append(entry)
+        local_dt = datetime.fromtimestamp(entry["dt"], tz=local_tz)
+        if local_dt.date() >= today_local:
+            date = local_dt.strftime("%Y-%m-%d")
+            days[date].append(entry)
 
     forecast_list = []
     for date, entries in sorted(days.items()):
